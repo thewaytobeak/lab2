@@ -1,6 +1,8 @@
 """Задачи второй части лабораторной: корреляционный анализ."""
 from __future__ import annotations
 
+import pandas as pd
+
 from grader_contracts.correlation_tasks import BrainCorrelationSummary, BrainDataInput
 
 
@@ -12,4 +14,26 @@ def analyze_brain_correlations(data: BrainDataInput) -> BrainCorrelationSummary:
     В strongest_mri_feature верните название признака с наибольшим модулем
     корреляции с MRI_Count среди объединённых результатов двух групп.
     """
-    raise NotImplementedError
+    df = pd.read_csv(data.csv_path, sep="\t")
+
+    women = df[df["Gender"] == "Female"]
+    men = df[df["Gender"] == "Male"]
+
+    women_mri_correlation = {f: float(women[f].corr(women["MRI_Count"])) for f in ["FSIQ", "VIQ", "PIQ", "Weight", "Height"]}
+    men_mri_correlation = {f: float(men[f].corr(men["MRI_Count"])) for f in ["FSIQ", "VIQ", "PIQ", "Weight", "Height"]}
+
+    pairs = [
+        (abs(corr), feature)
+        for corr_map in (women_mri_correlation, men_mri_correlation)
+        for feature, corr in corr_map.items()
+    ]
+
+    strongest_mri_feature = max(pairs)[1] 
+
+    return BrainCorrelationSummary(
+        men_count=len(men),
+        women_count=len(women),
+        women_mri_correlation=women_mri_correlation,
+        men_mri_correlation=men_mri_correlation,
+        strongest_mri_feature=strongest_mri_feature,
+    )
