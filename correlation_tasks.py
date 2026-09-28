@@ -4,7 +4,10 @@ from __future__ import annotations
 import pandas as pd
 
 from grader_contracts.correlation_tasks import BrainCorrelationSummary, BrainDataInput
+FEATURES = ["FSIQ", "VIQ", "PIQ", "Weight", "Height"]
 
+def mri_correlation(mri_data: pd.DataFrame) -> dict[str, float]:
+    return {f: float(mri_data[f].corr(mri_data["MRI_Count"])) for f in FEATURES}
 
 def analyze_brain_correlations(data: BrainDataInput) -> BrainCorrelationSummary:
     """Проанализируйте brainsize.txt.
@@ -19,8 +22,8 @@ def analyze_brain_correlations(data: BrainDataInput) -> BrainCorrelationSummary:
     women = df[df["Gender"] == "Female"]
     men = df[df["Gender"] == "Male"]
 
-    women_mri_correlation = {f: float(women[f].corr(women["MRI_Count"])) for f in ["FSIQ", "VIQ", "PIQ", "Weight", "Height"]}
-    men_mri_correlation = {f: float(men[f].corr(men["MRI_Count"])) for f in ["FSIQ", "VIQ", "PIQ", "Weight", "Height"]}
+    women_mri_correlation = mri_correlation(women)
+    men_mri_correlation = mri_correlation(men)
 
     pairs = [
         (abs(corr), feature)
