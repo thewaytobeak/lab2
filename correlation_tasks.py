@@ -7,7 +7,7 @@ from grader_contracts.correlation_tasks import BrainCorrelationSummary, BrainDat
 FEATURES = ["FSIQ", "VIQ", "PIQ", "Weight", "Height"]
 
 def mri_correlation(mri_data: pd.DataFrame) -> dict[str, float]:
-    return {f: float(mri_data[f].corr(mri_data["MRI_Count"])) for f in FEATURES}
+    return {f: float(mri_data[f].corr(mri_data["MRI_Count"], method="pearson")) for f in FEATURES}
 
 def analyze_brain_correlations(data: BrainDataInput) -> BrainCorrelationSummary:
     """Проанализируйте brainsize.txt.
@@ -17,7 +17,7 @@ def analyze_brain_correlations(data: BrainDataInput) -> BrainCorrelationSummary:
     В strongest_mri_feature верните название признака с наибольшим модулем
     корреляции с MRI_Count среди объединённых результатов двух групп.
     """
-    df = pd.read_csv(data.csv_path, sep="\t", na_values=["NA", "?"])
+    df = pd.read_csv(data.csv_path, sep="\t")
 
     women = df[df["Gender"] == "Female"]
     men = df[df["Gender"] == "Male"]
@@ -29,9 +29,10 @@ def analyze_brain_correlations(data: BrainDataInput) -> BrainCorrelationSummary:
         (abs(corr), feature)
         for corr_map in (women_mri_correlation, men_mri_correlation)
         for feature, corr in corr_map.items()
+        if not pd.isna(corr)
     ]
     
-    strongest_mri_feature = max(pairs)[1]
+    strongest_mri_feature = max(pairs, key=lambda pair: pair[0])[1]
 
     return BrainCorrelationSummary(
         men_count=len(men),
